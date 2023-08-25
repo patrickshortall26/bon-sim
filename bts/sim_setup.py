@@ -1,7 +1,10 @@
 import agentpy as ap
 import numpy as np
 
-from bts.movement import flocking
+from bts.movement.general import normalise
+from bts.movement import flocking, random_walk
+
+MOVEMENT_TYPES = {'flocking' : flocking, 'random_walk' : random_walk}
 
 """"""""""""""""""""
 """ Set up model """ 
@@ -20,7 +23,7 @@ class Agent(ap.Agent):
         """
         Set up agents
         """
-        self.vel = self.model.nprandom.random(self.p.ndim) - 0.5
+        self.vel = self.p.speed*normalise(self.model.nprandom.random(self.p.ndim) - 0.5)
 
     def setup_pos(self, space):
         """
@@ -29,11 +32,6 @@ class Agent(ap.Agent):
         self.space = space
         self.neighbors = space.neighbors
         self.pos = space.positions[self]
-
-    """"""""""""""""""""""""
-    """ HELPER FUNCTIONS """
-    """"""""""""""""""""""""
-
     
     """"""""""""""""""
     """  MOVEMENT  """
@@ -43,7 +41,7 @@ class Agent(ap.Agent):
         """
         Update agent's velocity
         """
-        self.vel = flocking.update_vel(self)
+        self.vel = self.model.movement_type.update_vel(self)
 
 
     def update_position(self):
@@ -105,6 +103,7 @@ class Model(ap.Model):
         Initialise the space of the model and the agents in it. 
         This is called once at the beginning of the model
         """
+        self.movement_type = MOVEMENT_TYPES[self.p.movement_type]
         self.init_space()
         self.add_agents()
 

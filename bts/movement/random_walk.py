@@ -35,9 +35,9 @@ def generate_turning_amount():
     turning_amount = map(random_number)
     return turning_amount
 
-def turn():
+def turn(time_period):
     random_number = generate_random_number()
-    if random_number < 0.1:
+    if random_number < 1/time_period:
         return True
     else:
         return False
@@ -47,7 +47,7 @@ def update_vel(agent):
     Update 
     """
     old_vel = agent.vel
-    if turn():
+    if turn(agent.p.time_period):
         current_direction = get_direction(old_vel)
         turning_amount = generate_turning_amount()
         new_direction = current_direction + turning_amount

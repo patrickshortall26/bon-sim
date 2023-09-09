@@ -36,12 +36,20 @@ class Agent(ap.Agent):
     """"""""""""""""""
     """  MOVEMENT  """
     """"""""""""""""""
+    def avoid_borders(self):
+        for dim in range(self.p.ndim):
+            if self.pos[dim] < 30:
+                self.vel[dim] += 0.5
+            if self.pos[dim] > self.p.size - 30:
+                self.vel[dim] -= 0.5
+        self.vel = normalise(self.vel)
 
     def update_velocity(self):
         """
         Update agent's velocity
         """
         self.vel = self.model.movement_type.update_vel(self)
+        self.avoid_borders()
 
 
     def update_position(self):

@@ -1,34 +1,10 @@
 from bts.sim_setup import Model, run_sim
 from bts.sim_animation import animate
-
-def flocking_parameters():
-    parameters = {
-        'inner_radius': 20,
-        'outer_radius': 70,
-        'cohesion_strength': 0.01,
-        'separation_strength': 0.1,
-        'alignment_strength': 0.05
-    }
-    return parameters
-
-def random_walk_parameters():
-    parameters = {
-    }
-    return parameters
-
-
-def movement_parameters(movement_type):
-    movement_parameters = {
-        'flocking' : flocking_parameters,
-        'random_walk' : random_walk_parameters
-    }
-    parameters = movement_parameters[movement_type]()
-    return parameters
+from parameters import movement_parameters
 
 def basic_parameters():
     parameters = {
         'size': 500,
-        'seed': 123,
         'steps': 500,
         'ndim': 2,
         'population': 50,

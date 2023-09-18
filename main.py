@@ -1,15 +1,17 @@
-from bts.sim_setup import Model, run_sim
-from bts.sim_animation import animate
-from parameters import movement_parameters
+from bts.simulation.model import Model, run_sim
+from bts.simulation.animation import animate
+from parameters import movement_parameters, opinion_parameters
 
 def basic_parameters():
     parameters = {
         'size': 500,
         'steps': 500,
         'ndim': 2,
-        'population': 50,
+        'healthy_population': 50,
+        'faulty_population' : 50,
         'movement_type' : 'random_walk',
-        'speed' : 2
+        'opinion_updating_strategy' : 'pooling',
+        'speed' : 3
     }
     return parameters
 
@@ -19,7 +21,9 @@ def define_parameters():
     """
     parameters = basic_parameters()
     movement_type = parameters['movement_type']
+    opinion_updating_strategy = parameters['opinion_updating_strategy']
     parameters.update(movement_parameters(movement_type))
+    parameters.update(opinion_parameters(opinion_updating_strategy))
     return parameters
 
 def main():

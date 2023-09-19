@@ -1,5 +1,16 @@
 import numpy as np
 
+def dezerofy(pool_array):
+    """
+    Change any 0s or 1s in pool array to a teeny tiny number or 1 - a teeny tiny number
+    """
+    for i, opinion in enumerate(pool_array):
+        if opinion == np.float64(0):
+            pool_array[i] = 2.2204460492503131e-16
+        if opinion >= 1:
+            pool_array[i] = 1 - 2.2204460492503131e-16
+    return pool_array
+
 def pool_opinions(agent, nbs):
     """
     Pool the opinions from nearby agents
@@ -8,8 +19,8 @@ def pool_opinions(agent, nbs):
     # Pool if agent has neighbours and none are granuloma
     if len(nbs) > 0 and "Granuloma" not in nbs.type:
         nbs_ops_array = np.array(nbs.opinion)
-        # Add back in own opinion
-        pool_array = np.append(nbs_ops_array, agent.opinion)
+        pool_array = dezerofy(np.append(nbs_ops_array, agent.opinion))
+        # Check that no opinions have been rounded to 0 or 1
         h1 = (np.prod(pool_array))**agent.p.w
         h2 = (np.prod(1-pool_array))**agent.p.w
         # Update opinion using SProdOp

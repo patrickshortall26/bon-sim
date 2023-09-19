@@ -5,8 +5,8 @@ def pool_opinions(agent, nbs):
     Pool the opinions from nearby agents
     and update opinion
     """
-    # Pool if agent has neighbours
-    if len(nbs) > 0:
+    # Pool if agent has neighbours and none are granuloma
+    if len(nbs) > 0 and "Granuloma" not in nbs.type:
         nbs_ops_array = np.array(nbs.opinion)
         # Add back in own opinion
         pool_array = np.append(nbs_ops_array, agent.opinion)
@@ -20,7 +20,6 @@ def evidentially_update(agent):
     """
     Update opinions from evidence at an epsilon chance 
     """
-    # Upate using Chanelle's equation
     safe = not agent.model.search_space[int(agent.pos[0]),int(agent.pos[1])]
     if safe:
         agent.opinion = ((1-agent.p.alpha)*agent.opinion)/(agent.opinion+agent.p.alpha-2*agent.p.alpha*agent.opinion)

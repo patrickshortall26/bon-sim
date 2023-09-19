@@ -5,13 +5,16 @@ from parameters import movement_parameters, opinion_parameters
 def basic_parameters():
     parameters = {
         'size': 500,
-        'steps': 500,
+        'steps': 1000,
         'ndim': 2,
         'healthy_population': 50,
-        'faulty_population' : 50,
+        'faulty_population' : 0,
+        'detection_radius' : 20,
+        'faulty_search_rate' : 0.05,
+        'detection_chance' : 0.8,
+        'speed' : 3,
         'movement_type' : 'random_walk',
-        'opinion_updating_strategy' : 'pooling',
-        'speed' : 3
+        'opinion_updating_strategy' : 'pooling'
     }
     return parameters
 

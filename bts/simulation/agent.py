@@ -3,7 +3,7 @@ from bts.movement.general import normalise
 import agentpy as ap
 import numpy as np
 
-class Healthy(ap.Agent):
+class Agent(ap.Agent):
     """ 
     Class which defines agents and specifies their behaviour in the model
     """
@@ -17,7 +17,14 @@ class Healthy(ap.Agent):
         Set up agents
         """
         self.vel = self.p.speed*normalise(self.model.nprandom.random(self.p.ndim) - 0.5)
-        self.opinion = np.float64(self.model.random.random())
+        if self.p.healthy_population > 0:
+            self.opinion = np.float64(self.model.random.random())
+            self.type = "Healthy"
+            self.p.healthy_population -= 1
+        else:
+            self.opinion = 0.1
+            self.type = "Faulty"
+
         
     def setup_pos(self, space):
         """
@@ -46,6 +53,16 @@ class Healthy(ap.Agent):
         self.avoid_borders()
         self.vel *= self.p.speed
 
+    def update_tracking_velocity(self):
+        """
+        Granuloma agents update their tracking velocity
+        """
+        # Get faulty agent to be tracked
+        faulty_agent = self.model.faulty_agents.select(self.model.faulty_agents.id == self.tracking_id)[0]
+        self.vel = faulty_agent.pos - self.pos
+        # Avoid borders and normalise speed
+        self.avoid_borders()
+        self.vel *= self.p.speed
 
     def update_position(self):
         """
@@ -56,9 +73,21 @@ class Healthy(ap.Agent):
     """"""""""""""""""
     """  OPINION   """
     """"""""""""""""""
+    def faulty_check(self):
+        """
+        Check for faulty agents in the vicinity
+        """
+        if self.model.random.random() <= self.p.faulty_search_rate:
+            nbs = self.neighbors(self, distance=self.p.detection_radius)
+            if "Granuloma" not in nbs.type and len(nbs) > 0:
+                for nb in nbs:
+                    if nb.type == "Faulty":
+                        if self.model.random.random() <= self.p.detection_rate:
+                            self.type = "Granuloma"
+                            self.tracking_id = nb.id
 
     def update_opinion(self):
         """
         Update opinion of agent
         """
-        self.model.opinion_updating_strategy.update_opinion(self)
+        self = self.model.opinion_updating_strategy.update_opinion(self) 

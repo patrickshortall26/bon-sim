@@ -1,3 +1,3 @@
 # BoNSim
 
-BoNSim is a software package for simulating the best-of-n problem
+For testing whether a granuloma-style solution to byzantine agents in the best-of-2 problem works.

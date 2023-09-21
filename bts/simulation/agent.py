@@ -82,7 +82,7 @@ class Agent(ap.Agent):
             if "Granuloma" not in nbs.type and len(nbs) > 0:
                 for nb in nbs:
                     if nb.type == "Faulty":
-                        if self.model.random.random() <= self.p.detection_rate:
+                        if self.model.random.random() <= self.p.detection_chance:
                             self.type = "Granuloma"
                             self.tracking_id = nb.id
 

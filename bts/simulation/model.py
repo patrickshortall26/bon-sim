@@ -27,9 +27,9 @@ class Model(ap.Model):
         self.search_space = self.create_search_space()
         self.space = ap.Space(self, shape=[self.p.size]*self.p.ndim)
 
-    def create_search_space(self, min_size=20, max_size=40):
+    def create_search_space(self, min_size=20, max_size=120):
         search_space = np.zeros((self.p.size, self.p.size))
-        for _ in range(int(self.p.size/10)):
+        for _ in range(int(self.p.size/100)):
             # Generate unsafe spot
             unsafe_spot = np.ones([self.random.randint(min_size,max_size)]*self.p.ndim)
             # Pick a random index to put the unsafe spot

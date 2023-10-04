@@ -23,7 +23,7 @@ def single_run():
 
 def main():
     run_types = {'1' : single_run, '2' : multi_run}
-    run_type = input("Key in '0' for single run or '1' for multi runs: ")
+    run_type = input("Key in '1' for single run or '2' for multi runs: ")
     run_types[run_type]()
 
 

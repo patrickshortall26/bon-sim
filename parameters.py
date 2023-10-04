@@ -6,10 +6,10 @@ def basic_parameters():
         'healthy_population': 50,
         'faulty_population' : 5,
         'detection_radius' : 30,
-        'faulty_search_rate' : 0.05,
+        'faulty_search_rate' : 0.0,
         'detection_chance' : 0.8,
-        'speed' : 5,
-        'movement_type' : 'random_walk',
+        'speed' : 6,
+        'movement_type' : 'flocking',
         'opinion_updating_strategy' : 'pooling'
     }
     return parameters

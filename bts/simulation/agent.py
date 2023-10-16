@@ -11,19 +11,59 @@ class Agent(ap.Agent):
     """"""""""""
     """ INIT """
     """"""""""""
+    def pooling_setup(self):
+        """
+        Set up agents to pool
+        """
+        if self.p.healthy_population > 0:
+            self.opinion = self.model.random.random()
+            self.type = "Healthy"
+            self.p.healthy_population -= 1
+        else:
+            self.opinion = 0.05
+            self.type = "Faulty"
+    
+    def dmmd_setup(self):
+        """
+        Set up agents to follow DMMD strategy
+        """
+        if self.p.healthy_population > 0:
+            self.opinion = self.model.random.choice([0.05, 0.95])
+            self.type = "Healthy"
+            self.p.healthy_population -= 1
+            self.state = "exploration"
+            self.observations = [0, 0]
+            self.time_in_state = 0
+            self.option_quality = 0
+        else:
+            self.opinion = 0.05
+            self.type = "Faulty"
+            self.state = "dissemination"
+
+    def bbots_setup(self):
+        """
+        Set up agents to pool
+        """
+        if self.p.healthy_population > 0:
+            self.opinion = 0.5
+            self.type = "Healthy"
+            self.p.healthy_population -= 1
+            self.observations = [0, 0]
+            self.last_observation = 0.5
+            self.time_since_observation = 0
+        else:
+            self.opinion = 0.05
+            self.type = "Faulty"
+
 
     def setup(self):
         """
         Set up agents
         """
+        setups = {"pooling" : self.pooling_setup, "dmmd" : self.dmmd_setup, 'bbots' : self.bbots_setup}
         self.vel = self.p.speed*normalise(self.model.nprandom.random(self.p.ndim) - 0.5)
-        if self.p.healthy_population > 0:
-            self.opinion = np.float64(self.model.random.random())
-            self.type = "Healthy"
-            self.p.healthy_population -= 1
-        else:
-            self.opinion = 0.1
-            self.type = "Faulty"
+        setups[self.p.opinion_updating_strategy]()
+            
 
         
     def setup_pos(self, space):
@@ -39,9 +79,9 @@ class Agent(ap.Agent):
     """"""""""""""""""
     def avoid_borders(self):
         for dim in range(self.p.ndim):
-            if self.pos[dim] < 30:
+            if self.pos[dim] < int(self.p.size/20):
                 self.vel[dim] += self.p.speed*0.5
-            if self.pos[dim] > self.p.size - 30:
+            if self.pos[dim] > self.p.size - int(self.p.size/20):
                 self.vel[dim] -= self.p.speed*0.5
         self.vel = normalise(self.vel)
 

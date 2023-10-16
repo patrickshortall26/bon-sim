@@ -1,13 +1,14 @@
 import agentpy as ap
 import numpy as np
+import itertools
 
 from bts.movement import flocking, random_walk
-from bts.opinion_updating import pooling
+from bts.opinion_updating import pooling, dmmd, bayes_bots
 
 from bts.simulation.agent import Agent
 
 MOVEMENT_TYPES = {'flocking' : flocking, 'random_walk' : random_walk}
-OPINION_UPDATING_STRATEGIES = {'pooling' : pooling}
+OPINION_UPDATING_STRATEGIES = {'pooling' : pooling, 'bbots' : bayes_bots, 'dmmd' : dmmd}
 
 """"""""""""""""""""
 """ Set up model """ 
@@ -27,15 +28,18 @@ class Model(ap.Model):
         self.search_space = self.create_search_space()
         self.space = ap.Space(self, shape=[self.p.size]*self.p.ndim)
 
-    def create_search_space(self, min_size=20, max_size=120):
+    def create_search_space(self):
         search_space = np.zeros((self.p.size, self.p.size))
-        for _ in range(int(self.p.size/100)):
-            # Generate unsafe spot
-            unsafe_spot = np.ones([self.random.randint(min_size,max_size)]*self.p.ndim)
-            # Pick a random index to put the unsafe spot
-            x_spot_index = self.random.randint(0,self.p.size-(1+unsafe_spot.shape[0]))
-            y_spot_index = self.random.randint(0,self.p.size-(1+unsafe_spot.shape[0]))
-            search_space[y_spot_index:y_spot_index+unsafe_spot.shape[0], x_spot_index:x_spot_index+unsafe_spot.shape[0]] = unsafe_spot
+        # Amount of boxes needed is space*fill ratio
+        nunsafe_spots = int(self.p.size*self.p.fill_ratio)
+        # Generate a list of all the possible areas an unsafe spot could be in
+        ij_poss_unsafe_spots = [list(range(0,self.p.size,self.p.size//10)), list(range(0,self.p.size,self.p.size//10))]
+        poss_unsafe_spots = list(itertools.product(*ij_poss_unsafe_spots))
+        # Add in unsafe spots and remove the index from the possible list until all the unsafe spots have been placed
+        for _ in range(nunsafe_spots):
+            indexes = self.random.choice(poss_unsafe_spots)
+            search_space[indexes[0]:indexes[0]+self.p.size//10, indexes[1]:indexes[1]+self.p.size//10] = 1
+            poss_unsafe_spots.remove(indexes)
         return search_space
 
     def add_agents(self):
@@ -59,7 +63,9 @@ class Model(ap.Model):
         opinion_array = np.array(self.healthy_agents.opinion)
         nconsensus_one = np.count_nonzero(opinion_array <= 0.1)
         nconsensus_two = np.count_nonzero(opinion_array >= 0.9)
-        if nconsensus_one >= 0.9*len(self.healthy_agents) or nconsensus_two >= 0.9*len(self.healthy_agents):
+        if nconsensus_one >= 0.9*len(self.healthy_agents):
+            self.stop()
+        if nconsensus_two >= 0.9*len(self.healthy_agents):
             self.stop()
 
     def record_positions(self):
@@ -76,6 +82,9 @@ class Model(ap.Model):
         """
         opinions = np.array(self.agents.opinion, dtype=np.float32)
         self.record("opinions", tuple(opinions))
+
+    def record_agent_list_sizes(self):
+        h_agents_num = len(self.healthy_agents.select(self.healthy_agents < 0.1))
 
     """"""""""""""""""""""""
     """  KEY METHODS   """

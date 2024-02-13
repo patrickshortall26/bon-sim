@@ -3,6 +3,21 @@ from bts.movement.general import normalise
 import agentpy as ap
 import numpy as np
 
+def get_true_positive(init_tp, tracking_time, alpha=0.2):
+    """
+    Get the true positive rate for a given time having tracked
+    """
+    true_positive = (init_tp + alpha*tracking_time)/(1 + alpha*tracking_time)
+    return true_positive
+
+def get_false_positive(init_fp, tracking_time, alpha=0.2):
+    """
+    Get the true positive rate for a given time having tracked
+    """
+    false_positive = 1 - ((1 - init_fp + alpha*tracking_time)/(1 + alpha*tracking_time))
+    return false_positive
+
+
 class Agent(ap.Agent):
     """ 
     Class which defines agents and specifies their behaviour in the model
@@ -16,7 +31,7 @@ class Agent(ap.Agent):
         Set up agents to pool
         """
         if self.p.healthy_population > 0:
-            self.opinion = self.model.random.random()
+            self.opinion = 0.5
             self.type = "Healthy"
             self.p.healthy_population -= 1
         else:
@@ -98,7 +113,7 @@ class Agent(ap.Agent):
         Granuloma agents update their tracking velocity
         """
         # Get faulty agent to be tracked
-        faulty_agent = self.model.faulty_agents.select(self.model.faulty_agents.id == self.tracking_id)[0]
+        faulty_agent = self.model.agents.select(self.model.agents.id == self.tracking_id)[0]
         self.vel = faulty_agent.pos - self.pos
         # Avoid borders and normalise speed
         self.avoid_borders()
@@ -113,6 +128,30 @@ class Agent(ap.Agent):
     """"""""""""""""""
     """  OPINION   """
     """"""""""""""""""
+    def update_tracking_time(self):
+        self.tracking_time += 1
+
+
+    def double_faulty_check(self):
+        """
+        Double check that the faulty agent you're tracking is faulty 
+        """
+        if self.model.random.random() <= self.p.faulty_search_rate:
+            # Check the actual status of the agent
+            actual_status = self.model.agents.select(self.model.agents.id == self.tracking_id)[0].type
+            if actual_status == "Healthy":
+                if self.model.random.random() <= (1-get_false_positive(self.p.false_positive, self.tracking_time)):
+                    self.type = "Healthy"
+                    self.tracking_id = None
+                    self.tracking_time = 0
+                    self.vel = -self.vel
+            else:
+                if self.model.random.random() <= (1-get_true_positive(self.p.true_positive, self.tracking_time)):
+                    self.type = "Healthy"
+                    self.tracking_id = None
+                    self.tracking_time = 0
+                    self.vel = -self.vel
+
     def faulty_check(self):
         """
         Check for faulty agents in the vicinity
@@ -121,10 +160,15 @@ class Agent(ap.Agent):
             nbs = self.neighbors(self, distance=self.p.detection_radius)
             if "Granuloma" not in nbs.type and len(nbs) > 0:
                 for nb in nbs:
+                    if self.model.random.random() <= self.p.false_positive:
+                        self.type = "Granuloma"
+                        self.tracking_id = nb.id
+                        self.tracking_time = 1
                     if nb.type == "Faulty":
-                        if self.model.random.random() <= self.p.detection_chance:
+                        if self.model.random.random() <= self.p.true_positive:
                             self.type = "Granuloma"
                             self.tracking_id = nb.id
+                            self.tracking_time = 1
 
     def update_opinion(self):
         """

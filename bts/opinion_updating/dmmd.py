@@ -20,19 +20,19 @@ def explore(agent):
     """
     agent = collect_evidence(agent)
     agent.time_in_state += 1
-    # Change to dissemination state with a 3 percent chance
-    if agent.model.random.random() <= 0.03:
+    # Change to dissemination state with a 5 percent chance
+    if agent.model.random.random() <= agent.p.disseminate_epsilon:
         if agent.opinion == 0.05:
-            agent.option_quality = int((agent.observations[0]/agent.time_in_state)*20)
+            agent.option_quality = int((agent.observations[0]/agent.time_in_state)*agent.p.dissemination_time)
         elif agent.opinion == 0.95:
-            agent.option_quality = int((agent.observations[1]/agent.time_in_state)*20)
+            agent.option_quality = int((agent.observations[1]/agent.time_in_state)*agent.p.dissemination_time)
         agent.state = "dissemination"
         agent.observations = [0,0]
         agent.time_in_state = 0
     return agent
 
 def disseminate(agent):
-    inner_nbs = agent.neighbors(agent, distance=agent.p.pooling_radius)
+    inner_nbs = agent.neighbors(agent, distance=agent.p.detection_radius)
     if agent.option_quality < 1:
         # Update opinion with whatever more of their neighbours have said
         # If neighbours have said equal, keep same opinion

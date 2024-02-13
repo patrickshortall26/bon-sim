@@ -3,14 +3,27 @@ from bts.visualisation.animation import animate
 from parameters import define_parameters
 import _pickle as pickle
 
+def get_ttcs(results):
+    """
+    Get the time to consensus for each of the results
+    """
+    return results.reporters.loc[results.reporters['Decision'] == "Correct decision", 'Time to consensus']
+
+def get_dict_results(results, results_filename):
+    Results = {'TTC' : {}, 'parameters' : None}
+    Results['TTC'][results_filename] = get_ttcs(results)
+    return Results
+
 def multi_run():
     """
     Define parameters, run simulations, and save as pickle
     """
     parameters = define_parameters()
-    results = run_exp(Model, parameters, 100)
+    results_filename = input("Please give a filename to store results: ")
+    results = run_exp(Model, parameters, 1000)
+    dict_results = get_dict_results(results)
     # Save as pickle
-    pickle.dump(results, file = open("results.pkl", "wb"))
+    pickle.dump(dict_results, file = open(f"parameter_sweep/{results_filename}", "wb"))
 
 def single_run():
     """

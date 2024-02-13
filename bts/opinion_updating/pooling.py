@@ -26,7 +26,7 @@ def pool_opinions(agent, nbs):
     # Pool if agent has neighbours and none are granuloma
     if len(nbs) > 0 and "Granuloma" not in nbs.type:
         nbs_ops_array = np.array(nbs.opinion)
-        pool_array = np.append(nbs_ops_array, agent.opinion)
+        pool_array = np.append(nbs_ops_array, agent.opinion)    # add agent's opinion back in
         h1 = (np.prod(pool_array))**agent.p.w
         h2 = (np.prod(1-pool_array))**agent.p.w
         # Update opinion using SProdOp
@@ -38,11 +38,11 @@ def evidentially_update(agent):
     Update opinions from evidence
     """
     agent = position_check(agent)
-    safe = not agent.model.search_space[int(agent.pos[0]),int(agent.pos[1])]
-    if safe:
-        agent.opinion = ((1-agent.p.alpha)*agent.opinion)/(agent.opinion+agent.p.alpha-2*agent.p.alpha*agent.opinion)
+    evidence1 = not agent.model.search_space[int(agent.pos[0]),int(agent.pos[1])]
+    if evidence1:
+        agent.opinion = ((1-agent.p.alpha)*agent.opinion)/(((1-agent.p.alpha)*agent.opinion)+agent.p.alpha*(1-agent.opinion))
     else:
-        agent.opinion = ((1-agent.p.alpha)*(1-agent.opinion))/((1-agent.p.alpha)*agent.opinion+agent.p.alpha*(1-agent.opinion))
+        agent.opinion = (agent.p.alpha*agent.opinion)/((agent.p.alpha*agent.opinion)+((1-agent.p.alpha)*(1-agent.opinion)))
     return agent
 
 def update_opinion(agent):
@@ -53,7 +53,7 @@ def update_opinion(agent):
         agent = evidentially_update(agent)
         agent = bounds_check(agent)
     if agent.model.random.random() <= agent.p.pooling_epsilon:
-        inner_nbs = agent.neighbors(agent, distance=agent.p.pooling_radius)
+        inner_nbs = agent.neighbors(agent, distance=agent.p.detection_radius)
         agent = pool_opinions(agent, inner_nbs)
         agent = bounds_check(agent)
     return agent

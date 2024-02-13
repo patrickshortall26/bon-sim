@@ -1,6 +1,11 @@
 # DS Stored
 *.DS_Store
 
+multi_runs/
+parameter_sweep/
+plots/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

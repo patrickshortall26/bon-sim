@@ -30,15 +30,16 @@ class Model(ap.Model):
 
     def create_search_space(self):
         search_space = np.zeros((self.p.size, self.p.size))
-        # Amount of boxes needed is space*fill ratio
-        nunsafe_spots = int(self.p.size*self.p.fill_ratio)
+        # Each tile is ten by ten, so 100 tiles in the space, number of black tiles is that times the fill ratio
+        nunsafe_spots = int(100*self.p.fill_ratio)
+        tile_side_length = self.p.size//10
         # Generate a list of all the possible areas an unsafe spot could be in
-        ij_poss_unsafe_spots = [list(range(0,self.p.size,self.p.size//10)), list(range(0,self.p.size,self.p.size//10))]
+        ij_poss_unsafe_spots = [list(range(0,self.p.size,tile_side_length)), list(range(0,self.p.size,tile_side_length))]
         poss_unsafe_spots = list(itertools.product(*ij_poss_unsafe_spots))
         # Add in unsafe spots and remove the index from the possible list until all the unsafe spots have been placed
         for _ in range(nunsafe_spots):
             indexes = self.random.choice(poss_unsafe_spots)
-            search_space[indexes[0]:indexes[0]+self.p.size//10, indexes[1]:indexes[1]+self.p.size//10] = 1
+            search_space[indexes[0]:indexes[0]+tile_side_length, indexes[1]:indexes[1]+tile_side_length] = 1
             poss_unsafe_spots.remove(indexes)
         return search_space
 
@@ -61,30 +62,60 @@ class Model(ap.Model):
         Check if agents have reached consensus for either option
         """
         opinion_array = np.array(self.healthy_agents.opinion)
-        nconsensus_one = np.count_nonzero(opinion_array <= 0.1)
-        nconsensus_two = np.count_nonzero(opinion_array >= 0.9)
+        nconsensus_one = np.count_nonzero(opinion_array >= 0.9)
+        nconsensus_two = np.count_nonzero(opinion_array <= 0.1)
         if nconsensus_one >= 0.9*len(self.healthy_agents):
+            self.correct_decision = not bool(round(self.p.fill_ratio))
             self.stop()
         if nconsensus_two >= 0.9*len(self.healthy_agents):
+            self.correct_decision = bool(round(self.p.fill_ratio))
             self.stop()
 
     def record_positions(self):
         """
         Record positions of agents
         """
-        pos = self.space.positions.values()
-        pos = np.array(tuple(pos)).T
-        self.record("pos", pos)
+        # Setup agent lists for h1, h2, and undecided
+        healthy_h1 = self.healthy_agents.select(self.healthy_agents.opinion >= 0.9)
+        healthy_h2 = self.healthy_agents.select(self.healthy_agents.opinion <= 0.1)
+        healthy_undecided = self.healthy_agents.select(self.healthy_agents.opinion > 0.1 and self.healthy_agents.opinion < 0.9)
 
-    def record_opinions(self):
-        """
-        Record opinions of agents
-        """
-        opinions = np.array(self.agents.opinion, dtype=np.float32)
-        self.record("opinions", tuple(opinions))
+        # Get positions of healthy agents
+        healthy_h1_pos = np.array(tuple(   healthy_h1.pos  )).T
+        healthy_h2_pos = np.array(tuple(   healthy_h2.pos   )).T
+        healthy_undecided_pos = np.array(tuple(   healthy_undecided.pos    )).T
 
-    def record_agent_list_sizes(self):
-        h_agents_num = len(self.healthy_agents.select(self.healthy_agents < 0.1))
+        # Get positions of faulty and tracking agents
+        faulty_pos = np.array(tuple(   self.faulty_agents.pos   )).T
+        tracking_pos = np.array(tuple(   self.granuloma_agents.pos   )).T
+
+        # Record all the positions 
+        self.record("healthy_h1_pos", healthy_h1_pos)
+        self.record("healthy_h2_pos", healthy_h2_pos)
+        self.record("healthy_undecided_pos", healthy_undecided_pos)
+        self.record("faulty_pos", faulty_pos)
+        self.record("tracking_pos", tracking_pos)
+
+    def record_numbers(self):
+        """
+        Record the following three numbers:
+        - Number of healthy agents
+        - Number of faulty agents
+        - Number of tracking agents
+        - Number of healthy agents with belief in H1
+        - Number of healthy agents with belief in H2
+        """
+        # First three
+        self.record("nHealthy", len(self.healthy_agents))
+        self.record("nFaulty", len(self.faulty_agents))
+        self.record("nTracking", len(self.granuloma_agents))
+        # Last two
+        opinion_array = np.array(self.healthy_agents.opinion)
+        nconsensus_one = np.count_nonzero(opinion_array >= 0.9)
+        nconsensus_two = np.count_nonzero(opinion_array <= 0.1)
+        self.record("nH1", nconsensus_one)
+        self.record("nH2", nconsensus_two)
+
 
     """"""""""""""""""""""""
     """  KEY METHODS   """
@@ -101,24 +132,28 @@ class Model(ap.Model):
         self.init_space()
         self.add_agents()
         self.define_subsets()
+        self.correct_decision = "No decision"
 
     def step(self):
         """ 
         Put anything in here you want each agent to do at each step (e.g. update position)
         """
+        self.granuloma_agents.double_faulty_check()
         self.healthy_agents.faulty_check()
         self.define_subsets()
         self.healthy_agents.update_opinion()
         self.non_granuloma_agents.update_velocity()
         self.granuloma_agents.update_tracking_velocity()
+        self.granuloma_agents.update_tracking_time()
         self.agents.update_position()
 
     def update(self):
         """
         Put here any data you want to record or checks to terminate the simulation.
         """
-        self.record_positions()
-        self.record_opinions()
+        if self.p.record_positions:
+            self.record_positions()
+        self.record_numbers()
         self.check_consensus()
     
     def end(self):
@@ -126,6 +161,9 @@ class Model(ap.Model):
         Called at the end of the simulation.
         Put here any metrics you want to save at the end of the model 
         """
+        decisions = {False : "Wrong decision", True : "Correct decision", "No decision" : "No decision"}
+        self.report("Decision", decisions[self.correct_decision])
+        self.report("Time to consensus", self.t)
 
 """"""""""""""""""
 """ Run model """ 
@@ -144,7 +182,7 @@ def run_exp(model, parameters, nruns):
     """
     Run many simulations and collect results for each
     """
-    sample = ap.Sample(parameters, nruns)
-    exp = ap.Experiment(model, sample, record=True)
-    results = exp.run(-1)
+    sample = ap.Sample(parameters, nruns, method='linspace',  randomize=False)
+    exp = ap.Experiment(model, sample, record=True, randomize=False)
+    results = exp.run(-1, verbose=10)
     return results

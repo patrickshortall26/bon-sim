@@ -1,3 +1,5 @@
+import agentpy as ap
+
 """"""""""""""""""""
 """ Main Params """
 """"""""""""""""""""
@@ -5,16 +7,19 @@
 def basic_parameters():
     # Define basic parameters
     parameters = {
-        'size': 100,
-        'fill_ratio' : 0.45,
+        'size': 200,
+        'seed': ap.IntRange(0, 10000),
+        'fill_ratio' : 0.25,
         'steps': 1000,
         'ndim': 2,
-        'healthy_population': 50,
-        'faulty_population' : 0,
+        'healthy_population': 27,
+        'faulty_population' : 3,
         'detection_radius' : 30,
-        'faulty_search_rate' : 0.0,
-        'detection_chance' : 0.8,
-        'speed' : 0.5
+        'faulty_search_rate' : 0.1,
+        'true_positive' : 0.80,
+        'false_positive': 0.01,
+        'speed' : 1,
+        'record_positions' : False
     }
     return parameters
 
@@ -24,18 +29,16 @@ def basic_parameters():
 
 def pooling_parameters():
     parameters = {
-        'pooling_radius' : 30,
         'evidence_epsilon' : 0.02,
-        'pooling_epsilon' : 0.01,
+        'pooling_epsilon' : 0.02,
         'alpha' : 0.1,
-        'w' : 0.5,
+        'w' : 1,
     }
     return parameters
 
 def bbots_parameters():
     parameters = {
-        'nb_radius' : 5,
-        'tau' : 100,
+        'tau' : 20,
         'alpha_0' : 40,
         'p_c' : 0.99,
         'u_plus' : True
@@ -44,7 +47,8 @@ def bbots_parameters():
 
 def dmmd_parameters():
     parameters = {
-        'pooling_radius' : 30
+        "dissemination_time" : 50,
+        "disseminate_epsilon" : 0.10
     }
     return parameters
 
@@ -89,6 +93,7 @@ def define_parameters():
     Define parameters for model
     """
     parameters = basic_parameters()
+    parameters.update({'record_positions' : True})
     parameters, movement_type = choose_movement_type(parameters)
     parameters, opinion_updating_strategy = choose_opinion_updating_strategy(parameters)
     parameters.update(movement_parameters(movement_type))

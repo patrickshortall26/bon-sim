@@ -10,34 +10,36 @@ def position_check(agent):
 def make_observation(agent):
     """
     See if the area is white or black
+    white = safe
+    black = unsafe
     """
     # Check agents position isn't out of index range
     agent = position_check(agent)
     # Make observation
     safe = not agent.model.search_space[int(agent.pos[0]),int(agent.pos[1])]
     if safe:
-        agent.observations[1] += 1
+        agent.observations[0] += 1
         agent.last_observation = 0.95
     else:
-        agent.observations[0] += 1
+        agent.observations[1] += 1
         agent.last_observation = 0.05
     return agent
 
 def neighbour_time(agent):
-    nbs = agent.neighbors(agent, distance=agent.p.nb_radius)
+    nbs = agent.neighbors(agent, distance=agent.p.detection_radius)
     if "Granuloma" not in nbs.type:
         for nb in nbs:
             if agent.p.u_plus == True and nb.opinion != 0.5:        # If neighbour is 'decided' take that as their opinion
                 # See what the neighbours are saying
-                if nb.opinion == 0.05:
+                if nb.opinion == 0.95:
                     agent.observations[0] += 1
-                elif nb.opinion == 0.95:
+                elif nb.opinion == 0.05:
                     agent.observations[1] += 1
             else:                                                   # If not get what their last observation was
                 # See what the neighbours are saying
-                if nb.last_observation == 0.05:
+                if nb.last_observation == 0.95:
                     agent.observations[0] += 1
-                elif nb.last_observation == 0.95:
+                elif nb.last_observation == 0.05:
                     agent.observations[1] += 1
     return agent
 
@@ -47,9 +49,9 @@ def cdf_check(agent):
     """
     p = beta.cdf(0.5, agent.observations[0] + agent.p.alpha_0, agent.observations[1] + agent.p.alpha_0)
     if p > agent.p.p_c:
-        agent.opinion = 0.95
-    elif (1-p) > agent.p.p_c:
         agent.opinion = 0.05
+    elif (1-p) > agent.p.p_c:
+        agent.opinion = 0.95
     return agent
 
 

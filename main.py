@@ -20,7 +20,6 @@ def multi_runs():
     Define parameters, run simulations, and save as pickle
     """
     decisions_strategies = ["SProdOp", "BBots", "DMMD"]
-    decisions_strategies = ["BBots"]
 
     faulty_scenarios = ['NF', 'F', 'MF'] # Order as in boxplot
 
@@ -42,8 +41,6 @@ def multi_runs():
             dict_results = get_dict_results(results, results_filename)
             # Save as pickle
             pickle.dump(dict_results, file = open(results_filename, "wb"))
-        
-        break
 
         # Then do the parameter sweeps  
         # true positives

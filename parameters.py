@@ -60,8 +60,8 @@ def bbots_parameters():
         'opinion_updating_strategy' : 'bbots',
         'tau_evidence' : 30,
         'tau_sharing' : 20,
-        'alpha_0' : 10,
-        'p_c' : 0.95,
+        'alpha_0' : 2,
+        'p_c' : 0.9,
         'u_plus' : True
     }
     return parameters

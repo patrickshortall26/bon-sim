@@ -35,9 +35,8 @@ def generate_turning_amount():
     turning_amount = map(random_number)
     return turning_amount
 
-def turn(time_period):
-    random_number = generate_random_number()
-    if random_number < 1/time_period:
+def turn(agent):
+    if agent.time_straight == agent.time_before_turn:
         return True
     else:
         return False
@@ -47,12 +46,15 @@ def update_vel(agent):
     Update 
     """
     old_vel = agent.vel
-    if turn(agent.p.time_period):
+    if turn(agent):
         current_direction = get_direction(old_vel)
         turning_amount = generate_turning_amount()
         new_direction = current_direction + turning_amount
         magnitude = np.linalg.norm(agent.vel)
         new_vel = np.array([magnitude*sin(new_direction), magnitude*cos(new_direction)])
+        agent.time_before_turn = int(agent.model.nprandom.exponential(agent.p.time_period))
+        agent.time_straight = 0
         return new_vel
     else:
+        agent.time_straight += 1
         return old_vel

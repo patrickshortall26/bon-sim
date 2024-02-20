@@ -59,13 +59,11 @@ def update_opinion(agent):
     """
     Update agent's opinion using the 'Bayes Bots' algorithm
     """
-    agent.time_since_observation += 1
     # Make an observation every tau seconds
-    if agent.time_since_observation == agent.p.tau:
+    if agent.model.t % agent.p.tau_evidence == 0:
         agent = make_observation(agent)
-        agent.time_since_observation = 0
     # If undecided, get the neighbouring agents last observations and update posterior
-    if agent.opinion == 0.5:
+    if agent.opinion == 0.5 and agent.model.t % agent.p.tau_sharing == 0:
         # See what the neighbours are saying
         agent = neighbour_time(agent)
         # Try and make a decision

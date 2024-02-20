@@ -3,14 +3,14 @@ from bts.movement.general import normalise
 import agentpy as ap
 import numpy as np
 
-def get_true_positive(init_tp, tracking_time, alpha=0.2):
+def get_true_positive(init_tp, tracking_time, alpha=0.05):
     """
     Get the true positive rate for a given time having tracked
     """
     true_positive = (init_tp + alpha*tracking_time)/(1 + alpha*tracking_time)
     return true_positive
 
-def get_false_positive(init_fp, tracking_time, alpha=0.2):
+def get_false_positive(init_fp, tracking_time, alpha=0.05):
     """
     Get the true positive rate for a given time having tracked
     """
@@ -43,11 +43,15 @@ class Agent(ap.Agent):
         Set up agents to follow DMMD strategy
         """
         if self.p.healthy_population > 0:
-            self.opinion = self.model.random.choice([0.05, 0.95])
+            if self.p.healthy_population % 2 == 0:
+                self.opinion = 0.05
+            else:
+                self.opinion = 0.95
             self.type = "Healthy"
             self.p.healthy_population -= 1
             self.state = "exploration"
             self.observations = [0, 0]
+            self.explore_time = int(self.model.nprandom.exponential(self.p.tau_exploration)) + 1
             self.time_in_state = 0
             self.option_quality = 0
         else:
@@ -77,9 +81,10 @@ class Agent(ap.Agent):
         """
         setups = {"pooling" : self.pooling_setup, "dmmd" : self.dmmd_setup, 'bbots' : self.bbots_setup}
         self.vel = self.p.speed*normalise(self.model.nprandom.random(self.p.ndim) - 0.5)
+        self.time_straight = 0
+        self.time_before_turn = int(self.model.nprandom.exponential(self.p.time_period))
         setups[self.p.opinion_updating_strategy]()
             
-
         
     def setup_pos(self, space):
         """

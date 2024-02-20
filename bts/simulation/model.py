@@ -31,13 +31,15 @@ class Model(ap.Model):
     def create_search_space(self):
         search_space = np.zeros((self.p.size, self.p.size))
         # Each tile is ten by ten, so 100 tiles in the space, number of black tiles is that times the fill ratio
-        nunsafe_spots = int(100*self.p.fill_ratio)
-        tile_side_length = self.p.size//10
+        num_tiles = 20 # Num tiles in each direction
+        nunsafe_spots = int((num_tiles**2)*self.p.fill_ratio)
+        tile_side_length = self.p.size//num_tiles
         # Generate a list of all the possible areas an unsafe spot could be in
         ij_poss_unsafe_spots = [list(range(0,self.p.size,tile_side_length)), list(range(0,self.p.size,tile_side_length))]
         poss_unsafe_spots = list(itertools.product(*ij_poss_unsafe_spots))
         # Add in unsafe spots and remove the index from the possible list until all the unsafe spots have been placed
         for _ in range(nunsafe_spots):
+            
             indexes = self.random.choice(poss_unsafe_spots)
             search_space[indexes[0]:indexes[0]+tile_side_length, indexes[1]:indexes[1]+tile_side_length] = 1
             poss_unsafe_spots.remove(indexes)
@@ -132,7 +134,8 @@ class Model(ap.Model):
         self.init_space()
         self.add_agents()
         self.define_subsets()
-        self.correct_decision = "No decision"
+        self.correct_decision = False
+        self.observations = [0,0]
 
     def step(self):
         """ 
@@ -153,7 +156,7 @@ class Model(ap.Model):
         """
         if self.p.record_positions:
             self.record_positions()
-        self.record_numbers()
+            self.record_numbers()
         self.check_consensus()
     
     def end(self):
@@ -161,8 +164,7 @@ class Model(ap.Model):
         Called at the end of the simulation.
         Put here any metrics you want to save at the end of the model 
         """
-        decisions = {False : "Wrong decision", True : "Correct decision", "No decision" : "No decision"}
-        self.report("Decision", decisions[self.correct_decision])
+        self.report("Correct decision?", self.correct_decision)
         self.report("Time to consensus", self.t)
 
 """"""""""""""""""

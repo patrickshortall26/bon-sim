@@ -4,6 +4,7 @@
 multi_runs/
 parameter_sweep/
 plots/
+Results/
 
 
 # Byte-compiled / optimized / DLL files

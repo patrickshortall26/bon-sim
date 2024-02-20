@@ -49,10 +49,10 @@ def update_opinion(agent):
     """
     Update agent's opinion through evidential updating and opinion pooling
     """
-    if agent.model.random.random() <= agent.p.evidence_epsilon:
+    if agent.model.t % agent.p.tau_evidence == 0:
         agent = evidentially_update(agent)
         agent = bounds_check(agent)
-    if agent.model.random.random() <= agent.p.pooling_epsilon:
+    if agent.model.t % agent.p.tau_sharing == 0:
         inner_nbs = agent.neighbors(agent, distance=agent.p.detection_radius)
         agent = pool_opinions(agent, inner_nbs)
         agent = bounds_check(agent)

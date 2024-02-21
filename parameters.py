@@ -7,7 +7,7 @@ import numpy as np
 
 def basic_parameters(faulty_scenario, tp, fp):
     """ Sort out population """
-    total_pop = 10
+    total_pop = 20
     if faulty_scenario == "NF":
         healthy_pop = total_pop
         faulty_pop = 0
@@ -17,9 +17,9 @@ def basic_parameters(faulty_scenario, tp, fp):
 
     """ Sort out CTM-mitigation """
     if faulty_scenario == "MF":
-        search_rate = 0.1
+        search_rate = 20
     else:
-        search_rate = 0
+        search_rate = 2000
 
     # Define basic parameters
     parameters = {
@@ -32,6 +32,7 @@ def basic_parameters(faulty_scenario, tp, fp):
         'faulty_population' : faulty_pop,
         'detection_radius' : 50,
         'faulty_search_rate' : search_rate,
+        'double_check_rate' : 10,
         'true_positive' : tp,
         'false_positive': fp,
         'speed' : 2,

@@ -118,6 +118,16 @@ class Model(ap.Model):
         self.record("nH1", nconsensus_one)
         self.record("nH2", nconsensus_two)
 
+    def non_dupe(self):
+        for agent_i in self.granuloma_agents:
+            for agent_ii in self.granuloma_agents:
+                if agent_i.id != agent_ii.id:
+                    if agent_i.tracking_id == agent_ii.tracking_id:
+                        agent_i.type = "Healthy"
+                        agent_i.tracking_id = None
+                        agent_i.tracking_time = 0
+        self.define_subsets()
+
 
     """"""""""""""""""""""""
     """  KEY METHODS   """
@@ -144,6 +154,7 @@ class Model(ap.Model):
         self.granuloma_agents.double_faulty_check()
         self.healthy_agents.faulty_check()
         self.define_subsets()
+        self.non_dupe()
         self.healthy_agents.update_opinion()
         self.non_granuloma_agents.update_velocity()
         self.granuloma_agents.update_tracking_velocity()

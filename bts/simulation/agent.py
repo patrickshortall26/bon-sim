@@ -3,14 +3,14 @@ from bts.movement.general import normalise
 import agentpy as ap
 import numpy as np
 
-def get_true_positive(init_tp, tracking_time, alpha=0.05):
+def get_true_positive(init_tp, tracking_time, alpha=0.001):
     """
     Get the true positive rate for a given time having tracked
     """
     true_positive = (init_tp + alpha*tracking_time)/(1 + alpha*tracking_time)
     return true_positive
 
-def get_false_positive(init_fp, tracking_time, alpha=0.05):
+def get_false_positive(init_fp, tracking_time, alpha=0.001):
     """
     Get the true positive rate for a given time having tracked
     """
@@ -141,7 +141,7 @@ class Agent(ap.Agent):
         """
         Double check that the faulty agent you're tracking is faulty 
         """
-        if self.model.random.random() <= self.p.faulty_search_rate:
+        if self.tracking_time % self.p.double_check_rate == 0:
             # Check the actual status of the agent
             actual_status = self.model.agents.select(self.model.agents.id == self.tracking_id)[0].type
             if actual_status == "Healthy":
@@ -161,19 +161,24 @@ class Agent(ap.Agent):
         """
         Check for faulty agents in the vicinity
         """
-        if self.model.random.random() <= self.p.faulty_search_rate:
-            nbs = self.neighbors(self, distance=self.p.detection_radius)
-            if "Granuloma" not in nbs.type and len(nbs) > 0:
-                for nb in nbs:
-                    if self.model.random.random() <= self.p.false_positive:
-                        self.type = "Granuloma"
-                        self.tracking_id = nb.id
-                        self.tracking_time = 1
-                    if nb.type == "Faulty":
-                        if self.model.random.random() <= self.p.true_positive:
+        if self.model.t != 0:
+            if self.model.t % self.p.faulty_search_rate == 0:
+                nbs = self.neighbors(self, distance=self.p.detection_radius)
+                if "Granuloma" not in nbs.type and len(nbs) > 0:
+                    for nb in nbs:
+                        if self.model.random.random() <= self.p.false_positive and nb.type == "Healthy":
                             self.type = "Granuloma"
                             self.tracking_id = nb.id
                             self.tracking_time = 1
+                        if nb.type == "Faulty":
+                            if self.model.random.random() <= self.p.true_positive:
+                                self.type = "Granuloma"
+                                self.tracking_id = nb.id
+                                self.tracking_time = 1
+
+    def non_dupe(self):
+        """ Check there's not another granuloma agent tracking same 'faulty' agent """
+        #for 
 
     def update_opinion(self):
         """

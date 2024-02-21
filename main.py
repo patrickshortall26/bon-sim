@@ -34,7 +34,7 @@ def multi_runs():
 
         # faulty scenarios first
         for faulty_scenario in faulty_scenarios:
-            golden_params = [strategy, faulty_scenario, 0.88, 0.3]
+            golden_params = [strategy, faulty_scenario, 0.88, 0.03]
             parameters = define_parameters(golden_params)
             results = run_exp(Model, parameters, n_runs)
             results_filename = f"Results/fault_scenarios/{strategy}-{faulty_scenario}"
@@ -45,7 +45,7 @@ def multi_runs():
         # Then do the parameter sweeps  
         # true positives
         for tp in tps:
-            fp = 0.3
+            fp = 0.03
             golden_params = [strategy, faulty_scenario, tp, fp]
             parameters = define_parameters(golden_params)
             results = run_exp(Model, parameters, n_runs)
@@ -83,7 +83,7 @@ def single_run():
     """
     opinion_updating_strategies = {'0' : 'SProdOp', '1' : 'BBots', '2' : 'DMMD'}
     opinion_updating_strategy = opinion_updating_strategies[input("Select opinion updating strategy ('0' for SProdOp, '1' for BBots, and '2' for DMMD): ")]
-    golden_params = [opinion_updating_strategy,'NF',0.88,0.3]
+    golden_params = [opinion_updating_strategy,'MF',0.88,0.3]
     parameters = define_parameters(golden_params)
     parameters['record_positions'] = True
     model, results = run_sim(Model, parameters)

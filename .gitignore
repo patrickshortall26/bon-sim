@@ -3,8 +3,11 @@
 
 multi_runs/
 parameter_sweep/
-plots/
+Plots/
+Old Plots/
 Results/
+Old Results/
+Old Stuff/
 
 
 # Byte-compiled / optimized / DLL files

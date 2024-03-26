@@ -3,18 +3,18 @@ from bts.movement.general import normalise
 import agentpy as ap
 import numpy as np
 
-def get_true_positive(init_tp, tracking_time, alpha=0.001):
+def get_true_positive(init_tp, tracking_time, mu):
     """
     Get the true positive rate for a given time having tracked
     """
-    true_positive = (init_tp + alpha*tracking_time)/(1 + alpha*tracking_time)
+    true_positive = (init_tp + mu*tracking_time)/(1 + mu*tracking_time)
     return true_positive
 
-def get_false_positive(init_fp, tracking_time, alpha=0.001):
+def get_false_positive(init_fp, tracking_time, mu):
     """
     Get the true positive rate for a given time having tracked
     """
-    false_positive = 1 - ((1 - init_fp + alpha*tracking_time)/(1 + alpha*tracking_time))
+    false_positive = 1 - ((1 - init_fp + mu*tracking_time)/(1 + mu*tracking_time))
     return false_positive
 
 
@@ -145,13 +145,13 @@ class Agent(ap.Agent):
             # Check the actual status of the agent
             actual_status = self.model.agents.select(self.model.agents.id == self.tracking_id)[0].type
             if actual_status == "Healthy":
-                if self.model.random.random() <= (1-get_false_positive(self.p.false_positive, self.tracking_time)):
+                if self.model.random.random() <= (1-get_false_positive(self.p.false_positive, self.tracking_time, self.p.mu)):
                     self.type = "Healthy"
                     self.tracking_id = None
                     self.tracking_time = 0
                     self.vel = -self.vel
             else:
-                if self.model.random.random() <= (1-get_true_positive(self.p.true_positive, self.tracking_time)):
+                if self.model.random.random() <= (1-get_true_positive(self.p.true_positive, self.tracking_time, self.p.mu)):
                     self.type = "Healthy"
                     self.tracking_id = None
                     self.tracking_time = 0

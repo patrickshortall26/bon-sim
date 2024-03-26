@@ -5,7 +5,7 @@ import numpy as np
 """ Main Params """
 """"""""""""""""""""
 
-def basic_parameters(faulty_scenario, tp, fp):
+def basic_parameters(faulty_scenario, faulty_search_rate, double_check_rate, tp, fp, mu):
     """ Sort out population """
     total_pop = 20
     if faulty_scenario == "NF":
@@ -17,7 +17,7 @@ def basic_parameters(faulty_scenario, tp, fp):
 
     """ Sort out CTM-mitigation """
     if faulty_scenario == "MF":
-        search_rate = 20
+        search_rate = faulty_search_rate
     else:
         search_rate = 2000
 
@@ -32,13 +32,14 @@ def basic_parameters(faulty_scenario, tp, fp):
         'faulty_population' : faulty_pop,
         'detection_radius' : 50,
         'faulty_search_rate' : search_rate,
-        'double_check_rate' : 10,
+        'double_check_rate' : double_check_rate,
         'true_positive' : tp,
         'false_positive': fp,
         'speed' : 2,
         'record_positions' : False,
         'movement_type' : 'random_walk',
-        'time_period' : 50
+        'time_period' : 50,
+        'mu' : mu
     }
     return parameters
 

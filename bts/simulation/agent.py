@@ -34,6 +34,7 @@ class Agent(ap.Agent):
             self.opinion = 0.5
             self.type = "Healthy"
             self.p.healthy_population -= 1
+            self.obs_count = 0
         else:
             self.opinion = 0.05
             self.type = "Faulty"

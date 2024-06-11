@@ -52,7 +52,7 @@ def pooling_parameters():
         'opinion_updating_strategy' : 'pooling',
         'tau_evidence' : 30,
         'tau_sharing' : 20,
-        'alpha' : 0.1,
+        'alpha' : 0.2,
         'w' : 1,
     }
     return parameters

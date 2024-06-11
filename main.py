@@ -7,11 +7,18 @@ def get_ttcs(results):
     """
     Get the time to consensus for each of the results
     """
-    return results.reporters.loc[results.reporters['Correct decision?'] == True, 'Time to consensus']
+    # Old definition: results.reporters.loc[results.reporters['Correct decision?'] == True, 'Time to consensus']
+    return results.reporters.loc[(results.reporters['Correct decision?'] == True) | (results.reporters['Correct decision?'] == False), 'Time to consensus']
+
+def get_acc(results):
+    correct_decision_sims = len(results.reporters.loc[results.reporters['Correct decision?'] == True, 'Time to consensus'])
+    num_sims = len(results.reporters)
+    return correct_decision_sims/num_sims
 
 def get_dict_results(results, results_filename):
-    Results = {'TTC' : {}, 'parameters' : None}
+    Results = {'TTC' : {}, 'parameters' : None, 'ACC' : {}}
     Results['TTC'][results_filename] = get_ttcs(results)
+    Results['ACC'][results_filename] = get_acc(results)
     Results['parameters'] = results.parameters.constants
     return Results
 
@@ -27,7 +34,8 @@ def multi_runs():
     faulty_search_rates = [10, 20, 30, 40, 50] # or [20, 40, 60, 80, 100]
     double_check_rates = [5, 10, 15, 20, 25] # or [10, 20, 30, 40, 50]
     tps_fps = [(0.8,0.01), (0.84,0.02), (0.88,0.03), (0.92,0.04), (0.96,0.05)] # Sensitivity
-    mus = [0.001, 0.011, 0.021, 0.031, 0.041]
+    #mus = [0.001, 0.011, 0.021, 0.031, 0.041]
+    mus = [0, 0.025, 0.05, 0.075, 0.1]
 
     n_runs = 1000
 
@@ -35,8 +43,7 @@ def multi_runs():
 
         # Each of the faulty scenarios
         for faulty_scenario in faulty_scenarios:
-            break
-            golden_params = [strategy, faulty_scenario, 20, 10, 0.88, 0.03, 0.001]
+            golden_params = [strategy, faulty_scenario, 20, 10, 0.88, 0.03, 0.05]
             parameters = define_parameters(golden_params)
             results = run_exp(Model, parameters, n_runs)
             results_filename = f"Results/Fault_scenarios/{strategy}-{faulty_scenario}"
@@ -48,8 +55,7 @@ def multi_runs():
             
         # Faulty search rate
         for faulty_search_rate in faulty_search_rates:
-            break
-            golden_params = [strategy, 'MF', faulty_search_rate, 10, 0.88, 0.03, 0.001]
+            golden_params = [strategy, 'MF', faulty_search_rate, 10, 0.88, 0.03, 0.05]
             parameters = define_parameters(golden_params)
             results = run_exp(Model, parameters, n_runs)
             results_filename = f"Results/FSR/{strategy}-FSR-{faulty_search_rate}"
@@ -59,8 +65,7 @@ def multi_runs():
             
         # Double check rate
         for double_check_rate in double_check_rates:
-            break
-            golden_params = [strategy, 'MF', 20, double_check_rate, 0.88, 0.03, 0.001]
+            golden_params = [strategy, 'MF', 20, double_check_rate, 0.88, 0.03, 0.05]
             parameters = define_parameters(golden_params)
             results = run_exp(Model, parameters, n_runs)
             results_filename = f"Results/DCR/{strategy}-DCR-{double_check_rate}"
@@ -70,10 +75,9 @@ def multi_runs():
 
         # Sensitivity
         for tp_fp in tps_fps:
-            break
             tp = tp_fp[0]
             fp = tp_fp[1]
-            golden_params = [strategy, 'MF', 20, 10, tp, fp, 0.001]
+            golden_params = [strategy, 'MF', 20, 10, tp, fp, 0.05]
             parameters = define_parameters(golden_params)
             results = run_exp(Model, parameters, n_runs)
             results_filename = f"Results/Sensitivity/{strategy}-{int(tp*100)}-{int(fp*100)}"

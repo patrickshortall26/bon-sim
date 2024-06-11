@@ -2,8 +2,8 @@
 
 THINGS YOU (ME) WILL FORGET 
 
-H1 = White -> opinion closer to 1
-H2 = Black -> opinion closer to 0
+H1 = White -> opinion closer to 1 -> safe
+H2 = Black -> opinion closer to 0 -> unsafe
 
 Opinion = Value representing an agent's belief in the correct hypothesis
 

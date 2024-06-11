@@ -17,6 +17,15 @@ def bounds_check(agent):
     elif agent.opinion > 0.95:
             agent.opinion = 0.95
     return agent
+
+def collect_evidence(agent):
+    agent = position_check(agent)
+    safe = not agent.model.search_space[int(agent.pos[0]),int(agent.pos[1])]
+    if safe:
+        agent.obs_count += 1
+    else:
+        agent.obs_count -= 1
+    return agent
     
 def pool_opinions(agent, nbs):
     """
@@ -37,21 +46,24 @@ def evidentially_update(agent):
     """
     Update opinions from evidence
     """
-    agent = position_check(agent)
-    evidence1 = not agent.model.search_space[int(agent.pos[0]),int(agent.pos[1])]
-    if evidence1:
+    if agent.obs_count > 0:
         agent.opinion = ((1-agent.p.alpha)*agent.opinion)/(((1-agent.p.alpha)*agent.opinion)+agent.p.alpha*(1-agent.opinion))
-    else:
+    elif agent.obs_count < 0:
         agent.opinion = (agent.p.alpha*agent.opinion)/((agent.p.alpha*agent.opinion)+((1-agent.p.alpha)*(1-agent.opinion)))
+    else:
+        pass
+        
     return agent
 
 def update_opinion(agent):
     """
     Update agent's opinion through evidential updating and opinion pooling
     """
+    agent = collect_evidence(agent) # Update observations
     if agent.model.t % agent.p.tau_evidence == 0:
         agent = evidentially_update(agent)
         agent = bounds_check(agent)
+        agent.obs_count = 0
     if agent.model.t % agent.p.tau_sharing == 0:
         inner_nbs = agent.neighbors(agent, distance=agent.p.detection_radius)
         agent = pool_opinions(agent, inner_nbs)
